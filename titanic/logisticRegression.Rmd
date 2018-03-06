@@ -2,14 +2,42 @@
 title: "Titanic"
 author: "Arun kr. Khattri"
 date: "3 March 2018"
-output: html_document
+output:
+  html_document:
+    fg_height: 4.5
+    fig_width: 7
+    highlight: tango
+    number_sections: no
+    theme: cerulean
+    toc: yes
 ---
 
+<style type = "text/css">
+body{ /* Normal */
+  font-size: 14px;
+}
+h1{ /* Header 1 */
+  font-size: 24px;
+}
+h2{ /* Header 2 */
+  font-size: 20px;
+}
+h3{ /* Header 3 */
+  font-size: 16px;
+}
+code.r{ /* Code Block */
+  font-size: 12px;
+}
+pre{ /* Code Block */
+  font-size: 12px;
+}
+</style>
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+# Introduction
 
-all required libraries
+## all required libraries
 
 ```{r message=FALSE}
 library(tidyverse)
@@ -24,7 +52,7 @@ library(glmnet)
 library(xgboost)
 ```
 
-### Loading the data sets
+## Loading the data sets
 
 ```{r message=FALSE}
 train.file <- "./train.csv"
@@ -33,7 +61,7 @@ test <- read_csv(test.file)
 train <- read_csv((train.file))
 ```
 
-Check the dimensions
+### Check the dimensions
 
 ```{r}
 print(paste0(c("train Rows: ", "train Cols: "), dim(train)))
@@ -41,7 +69,9 @@ print(paste0(c("test Rows: ", "test Cols: "), dim(test)))
 ```
 
 
-### let's combine the train and test data first, to combine, column lengths must be same
+### Merge data set
+
+let's combine the train and test data first, to combine, column lengths must be same
 
 ```{r}
 train$set <- "train"
@@ -51,9 +81,9 @@ df <- rbind(train, test)
 glimpse(df)
 ```
 
-### Exploratory Data Analysis & Feature Engineering
+# Exploratory Data Analysis & Feature Engineering
 
-Unique values per column
+## Unique values per column
 
 
 ```{r}
@@ -75,7 +105,9 @@ unq_val %>%
 ```
 
 
-Check for missing values...
+## Check for missing values...
+
+### using "Amelia"
 
 ```{r}
 missmap(df, legend = FALSE, col = c("yellow", "black"),
@@ -86,7 +118,7 @@ gives a fair idea where data is missing. In case of Survived its test data which
 Cabin and Age has missing data in train as well as test data,
 Embarked has missing data in train data set.
 
-using dplyr...
+### using dplyr...
 
 ```{r}
 missing.values <- df %>% 
@@ -107,7 +139,8 @@ missing.values %>%
   coord_flip()
 ```
 
-#### Survivals
+# Survivals
+
 using train data...
 
 ```{r}
@@ -117,7 +150,7 @@ df %>%
   geom_bar()
 ```
 
-Survival Rate...
+## Survival Rate...
 
 ```{r}
 survival.summary <- df %>% 
@@ -135,7 +168,7 @@ surv.rate <- survival.summary$perCent[survival.summary$Survived == 1]
 surv.rate
 ```
 
-* Survival by Pclass...
+## Survival by Pclass...
 
 ```{r}
 df %>% 
@@ -152,7 +185,7 @@ df %>%
 
 travelling First class has its own advantages...
 
-* Survival by Sex...
+## Survival by Sex...
 
 ```{r}
 df %>% 
@@ -169,11 +202,11 @@ df %>%
 
 Almost 75% of female's survived...
 
-* Survival by Age...
+## Survival by Age...
 
 Aroun 20% of the data under this head is missing, let's first fill them by taking averages of the class they are travelling in and imputing age accordingly...
 
-function for imputing Age...
+### function for imputing Age...
 
 ```{r}
 impute_age <- function(age, pclass) {
@@ -199,12 +232,14 @@ impute_age <- function(age, pclass) {
 
 ```
 
-...Imputing the age.
+### Imputing the age.
 
 ```{r}
 fixed.age <- impute_age(df$Age, df$Pclass)
 df$Age <- fixed.age
 ```
+
+### Survival rate by Age
 
 Now plotting the survival rate by age...
 
@@ -230,6 +265,8 @@ df %>%
        y = "Density") +
   theme_bw()
 ```
+
+### Survival Rate by Age Group
 
 let's define the age group and see the survival rate by age-group
 
@@ -274,7 +311,9 @@ df %>%
   theme_bw()
 ```
 
-* Grouping the passenger's on their title
+## Survival by Title
+
+Grouping the passenger's on their title
 
 Extracting the title from the name and storing them under column "title"...
 
@@ -321,7 +360,7 @@ df <- df %>%
 glimpse(df)
 ```
 
-Survival Rate by title group
+### Survival Rate by title group
 
 ```{r}
 df %>% 
@@ -338,7 +377,7 @@ df %>%
   
 ```
 
-* Family Groups
+## Survival by Family Groups
 
 ```{r}
 df <- df %>% 
@@ -369,7 +408,8 @@ df %>%
 
 ```
 
-* Embarked
+## Survival by port of embark
+
 using the most common port to replace the NA
 
 ```{r}
@@ -395,6 +435,8 @@ df %>%
 
 ```
 
+# Setting the data for final show
+
 Finally setting the correct data types to left overs...
 
 ```{r}
@@ -407,7 +449,6 @@ df <- df %>%
 str(df)
 ```
 
-### Models
 
 Let's do the final recheck of the data and keep it in proper data type
 
@@ -417,6 +458,8 @@ df <- df %>%
 str(df)
 
 ```
+
+## split data
 
 Now selecting columns we would like to be in our model as splitting train set further into training and testing data...
 
@@ -441,13 +484,19 @@ print(paste0(c("train Rows: ", "train Cols: "), dim(final.train)))
 print(paste0(c("test Rows: ", "test Cols: "), dim(final.test)))
 ```
 
-#### Logistic Regression
+# Logistic Regression
+
+## on training set which is further splitted into train and test set
+
+### Model
 
 ```{r}
 log.model <- glm(Survived ~ ., family = binomial(link = "logit"),
                  data = final.train)
 summary(log.model)
 ```
+
+### Predict
 
 Prediction on test data
 
@@ -460,11 +509,13 @@ misClasificationError <- mean(res != final.test$Survived)
 print(paste('Accuracy', 1 - misClasificationError))
 ```
 
-confusion matrix
+### confusion matrix
 
 ```{r}
 table(final.test$Survived, probs > 0.5)
 ```
+
+## Original Data Set
 
 finally taking original train and test data set, fitting the model and predicting
 
@@ -481,7 +532,7 @@ print(paste0(c("train Rows: ", "train Cols: "), dim(orgnl.train)))
 print(paste0(c("test Rows: ", "test Cols: "), dim(orgnl.test)))
 ```
 
-logistic regression
+### logistic regression
 
 ```{r}
 final.log.model <- glm(Survived ~ ., family = binomial(link = "logit"),
@@ -489,7 +540,7 @@ final.log.model <- glm(Survived ~ ., family = binomial(link = "logit"),
 summary(final.log.model)
 ```
 
-Predict on test set
+### Predict on test set
 
 ```{r}
 test.probs <- predict(final.log.model, newdata = orgnl.test, type = "response")
