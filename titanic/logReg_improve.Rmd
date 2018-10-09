@@ -1,0 +1,25 @@
+---
+title: "Titanic: Predicting Survival with Logistic Regression - further improving it"
+author: "Arun kr. Khattri"
+date: "6 March 2018"
+output:
+  html_document:
+    fg_height: 4.5
+    fig_width: 7
+    highlight: tango
+    number_sections: no
+    theme: cerulean
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Reference
+1. [mice: Multivariate Imputation by Chained Equations in R] (https://www.jstatsoft.org/article/view/v045i03)
+
+# To Do:
+1. Impute missing values with MICE.
+
+

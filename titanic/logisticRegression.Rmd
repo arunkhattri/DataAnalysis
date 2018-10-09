@@ -1,5 +1,5 @@
 ---
-title: "Titanic"
+title: "Titanic: Predicting Survival with Logistic Regression"
 author: "Arun kr. Khattri"
 date: "3 March 2018"
 output:
